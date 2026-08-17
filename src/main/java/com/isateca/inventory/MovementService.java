@@ -23,6 +23,11 @@ public class MovementService {
         return movementRepository.findAll();
     }
 
+    @Transactional(readOnly = true)
+    public List<Movement> listRecent() {
+        return movementRepository.findTop10ByOrderByCreatedAtDesc();
+    }
+
     /**
      * Persists a new movement and applies its effect to the relevant stock item(s). Movements are
      * append-only (see {@code MovementCrud.isEditable()}), so this is only ever used for creation.
