@@ -25,12 +25,14 @@ class InventoryView extends VerticalLayout {
             WarehouseService warehouseService, MovementTypeService movementTypeService,
             AppUserService appUserService) {
 
+        var stockItemCrud = new StockItemCrud(stockItemService, productService, warehouseService);
+
         var tabs = new TabSheet();
         tabs.setSizeFull();
         tabs.add("Productos", new ProductCrud(productService, categoryService, unitOfMeasureService));
-        tabs.add("Existencias", new StockItemCrud(stockItemService, productService, warehouseService));
+        tabs.add("Existencias", stockItemCrud);
         tabs.add("Movimientos", new MovementCrud(movementService, productService, warehouseService,
-                movementTypeService, appUserService));
+                movementTypeService, appUserService, stockItemCrud::refreshData));
 
         setSizeFull();
         add(new ViewTitle("Inventario"), tabs);

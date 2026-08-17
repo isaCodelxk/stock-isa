@@ -82,17 +82,48 @@ public abstract class AbstractCrudView<T> extends VerticalLayout {
         grid.setItems(fetchAll());
     }
 
+    /**
+     * Public trigger to reload this view's data, for sibling views whose changes affect it (e.g. a
+     * stock view refreshing after a movement view posts a movement) — call from outside since
+     * {@link #refresh()} itself is only accessible to this class and same-package subclasses.
+     */
+    public final void refreshData() {
+        refresh();
+    }
+
+    /**
+     * Called after a successful save or delete, once the grid has already been refreshed. No-op by
+     * default; override to notify other components that this view's data (and whatever side effects
+     * it triggers) changed.
+     */
+    protected void afterChange() {
+    }
+
     protected @Nullable T getEditingItem() {
         return editingItem;
     }
 
+    /**
+     * Whether existing rows can be edited. Override to return {@code false} for append-only/ledger
+     * entities (e.g. inventory movements) where mutating a past record after the fact would desync
+     * whatever side effects its creation triggered.
+     */
+    protected boolean isEditable() {
+        return true;
+    }
+
     private Component createRowActions(T item) {
-        var editButton = new Button(new Icon(VaadinIcon.EDIT), event -> openForEdit(item));
-        editButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
+        var actions = new HorizontalLayout();
+        if (isEditable()) {
+            var editButton = new Button(new Icon(VaadinIcon.EDIT), event -> openForEdit(item));
+            editButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
+            actions.add(editButton);
+        }
         var deleteRowButton = new Button(new Icon(VaadinIcon.TRASH), event -> confirmDelete(item, () -> {
         }));
         deleteRowButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE, ButtonVariant.LUMO_ERROR);
-        return new HorizontalLayout(editButton, deleteRowButton);
+        actions.add(deleteRowButton);
+        return actions;
     }
 
     private void openForCreate() {
@@ -131,12 +162,17 @@ public abstract class AbstractCrudView<T> extends VerticalLayout {
         }
         try {
             persist(item);
+        } catch (IllegalStateException e) {
+            Notification.show(e.getMessage(), 4000, Notification.Position.MIDDLE)
+                    .addThemeVariants(NotificationVariant.LUMO_ERROR);
+            return;
         } catch (DataAccessException e) {
             Notification.show("No se pudo guardar: revisa que los datos no dupliquen un registro existente", 4000,
                     Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
             return;
         }
         refresh();
+        afterChange();
         dialog.close();
         Notification.show(entityName + " guardado", 3000, Notification.Position.BOTTOM_END)
                 .addThemeVariants(NotificationVariant.LUMO_SUCCESS);
@@ -153,12 +189,17 @@ public abstract class AbstractCrudView<T> extends VerticalLayout {
         confirm.addConfirmListener(event -> {
             try {
                 delete(item);
+            } catch (IllegalStateException e) {
+                Notification.show(e.getMessage(), 4000, Notification.Position.MIDDLE)
+                        .addThemeVariants(NotificationVariant.LUMO_ERROR);
+                return;
             } catch (DataAccessException e) {
                 Notification.show("No se pudo eliminar: el registro está en uso por otros datos", 4000,
                         Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
                 return;
             }
             refresh();
+            afterChange();
             afterDelete.run();
             Notification.show(entityName + " eliminado", 3000, Notification.Position.BOTTOM_END)
                     .addThemeVariants(NotificationVariant.LUMO_SUCCESS);

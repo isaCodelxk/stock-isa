@@ -33,6 +33,7 @@ class MovementCrud extends AbstractCrudView<Movement> {
     private final WarehouseService warehouseService;
     private final MovementTypeService movementTypeService;
     private final AppUserService appUserService;
+    private final Runnable onStockChanged;
 
     private final ComboBox<Product> productField = new ComboBox<>("Producto");
     private final ComboBox<Warehouse> warehouseField = new ComboBox<>("Bodega");
@@ -41,13 +42,14 @@ class MovementCrud extends AbstractCrudView<Movement> {
     private final ComboBox<AppUser> userField = new ComboBox<>("Usuario");
 
     MovementCrud(MovementService movementService, ProductService productService, WarehouseService warehouseService,
-            MovementTypeService movementTypeService, AppUserService appUserService) {
+            MovementTypeService movementTypeService, AppUserService appUserService, Runnable onStockChanged) {
         super("Movimiento");
         this.movementService = movementService;
         this.productService = productService;
         this.warehouseService = warehouseService;
         this.movementTypeService = movementTypeService;
         this.appUserService = appUserService;
+        this.onStockChanged = onStockChanged;
         init();
     }
 
@@ -105,6 +107,18 @@ class MovementCrud extends AbstractCrudView<Movement> {
         targetWarehouseField.setItems(warehouseService.list());
         movementTypeField.setItems(movementTypeService.list());
         userField.setItems(appUserService.list());
+    }
+
+    @Override
+    protected void afterChange() {
+        onStockChanged.run();
+    }
+
+    @Override
+    protected boolean isEditable() {
+        // Movements are an append-only ledger: editing one after the fact would desync the stock
+        // adjustment its creation already applied. Only creation and deletion are allowed.
+        return false;
     }
 
     @Override
