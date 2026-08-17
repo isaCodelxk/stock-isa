@@ -29,11 +29,11 @@ public class Product {
     @Nullable
     private String description;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(optional = false)
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(optional = false)
     @JoinColumn(name = "unit_of_measure_id", nullable = false)
     private UnitOfMeasure unitOfMeasure;
 

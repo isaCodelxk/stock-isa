@@ -1,6 +1,7 @@
 package com.isateca.catalog.ui;
 
 import com.isateca.catalog.UnitOfMeasure;
+import com.isateca.base.ui.AbstractCrudView;
 import com.isateca.catalog.UnitOfMeasureService;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.formlayout.FormLayout;
@@ -10,7 +11,7 @@ import com.vaadin.flow.data.binder.Binder;
 
 import java.util.List;
 
-class UnitOfMeasureCrud extends AbstractCatalogCrud<UnitOfMeasure> {
+class UnitOfMeasureCrud extends AbstractCrudView<UnitOfMeasure> {
 
     private final UnitOfMeasureService unitOfMeasureService;
 

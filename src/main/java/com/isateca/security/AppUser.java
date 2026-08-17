@@ -21,7 +21,7 @@ public class AppUser {
     @Column(name = "full_name", nullable = false)
     private String fullName;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(optional = false)
     @JoinColumn(name = "role_id", nullable = false)
     private Role role;
 

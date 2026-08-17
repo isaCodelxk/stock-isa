@@ -16,7 +16,7 @@ public class AttributeDefinition {
     @Column(name = "attribute_definition_id")
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "category_id")
     @Nullable
     private Category category;

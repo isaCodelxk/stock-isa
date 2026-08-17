@@ -1,4 +1,4 @@
-package com.isateca.catalog.ui;
+package com.isateca.base.ui;
 
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
@@ -17,18 +17,19 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.binder.ValidationException;
 import org.jspecify.annotations.Nullable;
+import org.springframework.dao.DataAccessException;
 
 import java.util.List;
 
 /**
- * Grid + Dialog form CRUD shell shared by the catalog views. Subclasses provide the entity-specific
- * columns, form fields and persistence calls; this class owns the toolbar, dialog wiring and delete
- * confirmation that are otherwise identical across every catalog.
+ * Grid + Dialog form CRUD shell shared by the catalog, inventory and security views. Subclasses
+ * provide the entity-specific columns, form fields and persistence calls; this class owns the
+ * toolbar, dialog wiring and delete confirmation that are otherwise identical across every view.
  *
  * Subclasses must call {@link #init()} as the last statement of their constructor, once their own
  * fields (used by {@link #buildColumns} / {@link #buildForm}) are assigned.
  */
-abstract class AbstractCatalogCrud<T> extends VerticalLayout {
+public abstract class AbstractCrudView<T> extends VerticalLayout {
 
     protected final Grid<T> grid = new Grid<>();
     protected final Binder<T> binder = new Binder<>();
@@ -38,7 +39,7 @@ abstract class AbstractCatalogCrud<T> extends VerticalLayout {
     private final Button deleteButton = new Button("Eliminar");
     private @Nullable T editingItem;
 
-    protected AbstractCatalogCrud(String entityName) {
+    protected AbstractCrudView(String entityName) {
         this.entityName = entityName;
         setSizeFull();
         setPadding(false);
@@ -95,8 +96,16 @@ abstract class AbstractCatalogCrud<T> extends VerticalLayout {
     }
 
     private void openForCreate() {
-        editingItem = createNew();
-        binder.readBean(editingItem);
+        T item;
+        try {
+            item = createNew();
+        } catch (IllegalStateException e) {
+            Notification.show(e.getMessage(), 4000, Notification.Position.MIDDLE)
+                    .addThemeVariants(NotificationVariant.LUMO_ERROR);
+            return;
+        }
+        editingItem = item;
+        binder.readBean(item);
         deleteButton.setVisible(false);
         dialog.setHeaderTitle("Nuevo: " + entityName);
         dialog.open();
@@ -120,7 +129,13 @@ abstract class AbstractCatalogCrud<T> extends VerticalLayout {
         } catch (ValidationException e) {
             return;
         }
-        persist(item);
+        try {
+            persist(item);
+        } catch (DataAccessException e) {
+            Notification.show("No se pudo guardar: revisa que los datos no dupliquen un registro existente", 4000,
+                    Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+            return;
+        }
         refresh();
         dialog.close();
         Notification.show(entityName + " guardado", 3000, Notification.Position.BOTTOM_END)
@@ -136,7 +151,13 @@ abstract class AbstractCatalogCrud<T> extends VerticalLayout {
         confirm.setConfirmText("Eliminar");
         confirm.setConfirmButtonTheme("error primary");
         confirm.addConfirmListener(event -> {
-            delete(item);
+            try {
+                delete(item);
+            } catch (DataAccessException e) {
+                Notification.show("No se pudo eliminar: el registro está en uso por otros datos", 4000,
+                        Notification.Position.MIDDLE).addThemeVariants(NotificationVariant.LUMO_ERROR);
+                return;
+            }
             refresh();
             afterDelete.run();
             Notification.show(entityName + " eliminado", 3000, Notification.Position.BOTTOM_END)
@@ -151,6 +172,11 @@ abstract class AbstractCatalogCrud<T> extends VerticalLayout {
 
     protected abstract void delete(T item);
 
+    /**
+     * Builds a new, unsaved instance to seed the create dialog. May throw {@link IllegalStateException}
+     * (shown to the user as a notification instead of opening the dialog) when required related data
+     * doesn't exist yet, e.g. creating a stock item before any product or warehouse exists.
+     */
     protected abstract T createNew();
 
     protected abstract void buildColumns(Grid<T> grid);

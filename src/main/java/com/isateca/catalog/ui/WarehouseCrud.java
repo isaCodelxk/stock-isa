@@ -1,6 +1,7 @@
 package com.isateca.catalog.ui;
 
 import com.isateca.catalog.Warehouse;
+import com.isateca.base.ui.AbstractCrudView;
 import com.isateca.catalog.WarehouseService;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.formlayout.FormLayout;
@@ -11,7 +12,7 @@ import com.vaadin.flow.data.binder.Binder;
 import java.util.List;
 import java.util.Optional;
 
-class WarehouseCrud extends AbstractCatalogCrud<Warehouse> {
+class WarehouseCrud extends AbstractCrudView<Warehouse> {
 
     private final WarehouseService warehouseService;
 

@@ -1,5 +1,6 @@
 package com.isateca.catalog.ui;
 
+import com.isateca.base.ui.AbstractCrudView;
 import com.isateca.catalog.Category;
 import com.isateca.catalog.CategoryService;
 import com.vaadin.flow.component.checkbox.Checkbox;
@@ -11,7 +12,7 @@ import com.vaadin.flow.data.binder.Binder;
 
 import java.util.List;
 
-class CategoryCrud extends AbstractCatalogCrud<Category> {
+class CategoryCrud extends AbstractCrudView<Category> {
 
     private final CategoryService categoryService;
     private final ComboBox<Category> parentField = new ComboBox<>("Categoría padre");

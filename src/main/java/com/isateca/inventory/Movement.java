@@ -20,29 +20,29 @@ public class Movement {
     @Column(name = "movement_id")
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(optional = false)
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
     // Origin warehouse, or the only warehouse involved when this isn't a transfer
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(optional = false)
     @JoinColumn(name = "warehouse_id", nullable = false)
     private Warehouse warehouse;
 
     // Only set for transfers
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "target_warehouse_id")
     @Nullable
     private Warehouse targetWarehouse;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(optional = false)
     @JoinColumn(name = "movement_type_id", nullable = false)
     private MovementType movementType;
 
     @Column(name = "quantity", nullable = false, precision = 14, scale = 3)
     private BigDecimal quantity;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(optional = false)
     @JoinColumn(name = "user_id", nullable = false)
     private AppUser user;
 

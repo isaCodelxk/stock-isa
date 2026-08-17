@@ -2,6 +2,7 @@ package com.isateca.catalog.ui;
 
 import com.isateca.catalog.AttributeDefinition;
 import com.isateca.catalog.AttributeDefinition.DataType;
+import com.isateca.base.ui.AbstractCrudView;
 import com.isateca.catalog.AttributeDefinitionService;
 import com.isateca.catalog.CategoryService;
 import com.vaadin.flow.component.checkbox.Checkbox;
@@ -14,7 +15,7 @@ import com.vaadin.flow.data.binder.Binder;
 import java.util.List;
 import java.util.Optional;
 
-class AttributeDefinitionCrud extends AbstractCatalogCrud<AttributeDefinition> {
+class AttributeDefinitionCrud extends AbstractCrudView<AttributeDefinition> {
 
     private final AttributeDefinitionService attributeDefinitionService;
     private final CategoryService categoryService;
