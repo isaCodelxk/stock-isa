@@ -8,16 +8,17 @@ import com.vaadin.flow.component.tabs.TabSheet;
 import com.vaadin.flow.router.Menu;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Route("usuarios")
 @PageTitle("Usuarios")
 @Menu(order = 3, icon = "vaadin:user-heart", title = "Usuarios")
 class SecurityView extends VerticalLayout {
 
-    SecurityView(RoleService roleService, AppUserService appUserService) {
+    SecurityView(RoleService roleService, AppUserService appUserService, PasswordEncoder passwordEncoder) {
         var tabs = new TabSheet();
         tabs.setSizeFull();
-        tabs.add("Usuarios", new AppUserCrud(appUserService, roleService));
+        tabs.add("Usuarios", new AppUserCrud(appUserService, roleService, passwordEncoder));
         tabs.add("Roles", new RoleCrud(roleService));
 
         setSizeFull();

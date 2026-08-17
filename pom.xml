@@ -60,6 +60,13 @@
             <scope>runtime</scope>
         </dependency>
         <dependency>
+            <!-- Just the PasswordEncoder API for hashing app_user.password_hash - not the full
+                 spring-boot-starter-security, since that would auto-configure a login-required
+                 filter chain for every route, which hasn't been asked for. -->
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-crypto</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
             <scope>test</scope>

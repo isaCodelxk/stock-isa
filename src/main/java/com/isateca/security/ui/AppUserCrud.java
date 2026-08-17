@@ -12,6 +12,8 @@ import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
+import com.vaadin.flow.data.binder.ValidationResult;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
 
@@ -19,12 +21,14 @@ class AppUserCrud extends AbstractCrudView<AppUser> {
 
     private final AppUserService appUserService;
     private final RoleService roleService;
+    private final PasswordEncoder passwordEncoder;
     private final ComboBox<Role> roleField = new ComboBox<>("Rol");
 
-    AppUserCrud(AppUserService appUserService, RoleService roleService) {
+    AppUserCrud(AppUserService appUserService, RoleService roleService, PasswordEncoder passwordEncoder) {
         super("Usuario");
         this.appUserService = appUserService;
         this.roleService = roleService;
+        this.passwordEncoder = passwordEncoder;
         init();
     }
 
@@ -41,7 +45,7 @@ class AppUserCrud extends AbstractCrudView<AppUser> {
         var usernameField = new TextField("Usuario");
         var fullNameField = new TextField("Nombre completo");
         var passwordField = new PasswordField("Contraseña");
-        passwordField.setHelperText("Sin hashear todavía: pendiente de integrar Spring Security");
+        passwordField.setHelperText("Al editar, déjala en blanco para no cambiar la contraseña actual");
         roleField.setItemLabelGenerator(Role::getName);
         var activeField = new Checkbox("Activo");
 
@@ -49,8 +53,19 @@ class AppUserCrud extends AbstractCrudView<AppUser> {
                 .bind(AppUser::getUsername, AppUser::setUsername);
         binder.forField(fullNameField).asRequired("El nombre es obligatorio")
                 .bind(AppUser::getFullName, AppUser::setFullName);
-        binder.forField(passwordField).asRequired("La contraseña es obligatoria")
-                .bind(AppUser::getPasswordHash, AppUser::setPasswordHash);
+        // The field never shows the stored hash (getter always returns ""); a blank value on save
+        // means "keep the current password" (setter no-ops) rather than wiping it out, which is only
+        // rejected by the validator when creating a brand new user.
+        binder.forField(passwordField).withValidator((value, context) -> {
+            var editing = getEditingItem();
+            boolean isNewUser = editing == null || editing.getId() == null;
+            return isNewUser && value.isBlank() ? ValidationResult.error("La contraseña es obligatoria")
+                    : ValidationResult.ok();
+        }).bind(user -> "", (user, value) -> {
+            if (!value.isBlank()) {
+                user.setPasswordHash(passwordEncoder.encode(value));
+            }
+        });
         binder.forField(roleField).asRequired("El rol es obligatorio").bind(AppUser::getRole, AppUser::setRole);
         binder.forField(activeField).bind(AppUser::isActive, AppUser::setActive);
 
