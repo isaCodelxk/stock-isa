@@ -5,6 +5,8 @@ import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.avatar.AvatarVariant;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.SvgIcon;
@@ -14,11 +16,18 @@ import com.vaadin.flow.component.sidenav.SideNavItem;
 import com.vaadin.flow.router.Layout;
 import com.vaadin.flow.server.menu.MenuConfiguration;
 import com.vaadin.flow.server.menu.MenuEntry;
+import com.vaadin.flow.spring.security.AuthenticationContext;
+import jakarta.annotation.security.PermitAll;
+import org.springframework.security.core.userdetails.UserDetails;
 
 @Layout
+@PermitAll
 public final class MainLayout extends AppLayout {
 
-    MainLayout() {
+    private final transient AuthenticationContext authContext;
+
+    MainLayout(AuthenticationContext authContext) {
+        this.authContext = authContext;
         setPrimarySection(Section.DRAWER);
         addToDrawer(createApplicationHeader(), createApplicationDrawer(), createApplicationFooter());
     }
@@ -48,6 +57,14 @@ public final class MainLayout extends AppLayout {
         var footer = new VerticalLayout(new Span("Made with ❤️ with Vaadin"));
         footer.setAlignItems(FlexComponent.Alignment.CENTER);
         footer.addClassName("app-footer");
+
+        authContext.getAuthenticatedUser(UserDetails.class).ifPresent(user -> {
+            var logoutBtn = new Button("Cerrar sesión (" + user.getUsername() + ")",
+                    event -> authContext.logout());
+            logoutBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_SMALL);
+            footer.add(logoutBtn);
+        });
+
         return footer;
     }
 

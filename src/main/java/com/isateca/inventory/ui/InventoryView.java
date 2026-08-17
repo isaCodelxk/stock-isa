@@ -14,10 +14,12 @@ import com.vaadin.flow.component.tabs.TabSheet;
 import com.vaadin.flow.router.Menu;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import jakarta.annotation.security.PermitAll;
 
 @Route("inventario")
 @PageTitle("Inventario")
 @Menu(order = 2, icon = "vaadin:stock", title = "Inventario")
+@PermitAll
 class InventoryView extends VerticalLayout {
 
     InventoryView(ProductService productService, StockItemService stockItemService, MovementService movementService,

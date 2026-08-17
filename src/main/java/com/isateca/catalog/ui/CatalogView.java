@@ -11,10 +11,12 @@ import com.vaadin.flow.component.tabs.TabSheet;
 import com.vaadin.flow.router.Menu;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import jakarta.annotation.security.PermitAll;
 
 @Route("catalogos")
 @PageTitle("Catálogos")
 @Menu(order = 1, icon = "vaadin:folder-o", title = "Catálogos")
+@PermitAll
 class CatalogView extends VerticalLayout {
 
     CatalogView(CategoryService categoryService, UnitOfMeasureService unitOfMeasureService,
