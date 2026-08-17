@@ -1,0 +1,39 @@
+package com.isateca.inventory.ui;
+
+import com.isateca.base.ui.ViewTitle;
+import com.isateca.catalog.MovementTypeService;
+import com.isateca.catalog.WarehouseService;
+import com.isateca.catalog.CategoryService;
+import com.isateca.catalog.UnitOfMeasureService;
+import com.isateca.inventory.MovementService;
+import com.isateca.inventory.ProductService;
+import com.isateca.inventory.StockItemService;
+import com.isateca.security.AppUserService;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.tabs.TabSheet;
+import com.vaadin.flow.router.Menu;
+import com.vaadin.flow.router.PageTitle;
+import com.vaadin.flow.router.Route;
+
+@Route("inventario")
+@PageTitle("Inventario")
+@Menu(order = 2, icon = "vaadin:stock", title = "Inventario")
+class InventoryView extends VerticalLayout {
+
+    InventoryView(ProductService productService, StockItemService stockItemService, MovementService movementService,
+            CategoryService categoryService, UnitOfMeasureService unitOfMeasureService,
+            WarehouseService warehouseService, MovementTypeService movementTypeService,
+            AppUserService appUserService) {
+
+        var tabs = new TabSheet();
+        tabs.setSizeFull();
+        tabs.add("Productos", new ProductCrud(productService, categoryService, unitOfMeasureService));
+        tabs.add("Existencias", new StockItemCrud(stockItemService, productService, warehouseService));
+        tabs.add("Movimientos", new MovementCrud(movementService, productService, warehouseService,
+                movementTypeService, appUserService));
+
+        setSizeFull();
+        add(new ViewTitle("Inventario"), tabs);
+        setFlexGrow(1, tabs);
+    }
+}
