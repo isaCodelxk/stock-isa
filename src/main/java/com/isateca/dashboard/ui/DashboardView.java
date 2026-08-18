@@ -112,6 +112,7 @@ class DashboardView extends VerticalLayout {
         }
         var soChart = new SOChart();
         soChart.setSize("100%", "300px");
+        soChart.disableDefaultLegend();
         var categories = new CategoryData(data.stream().map(NamedCount::name).toArray(String[]::new));
         var counts = new Data(data.stream().mapToDouble(NamedCount::count).toArray());
         var xAxis = new XAxis(categories);
