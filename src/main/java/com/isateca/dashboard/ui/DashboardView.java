@@ -3,12 +3,22 @@ package com.isateca.dashboard.ui;
 import com.isateca.base.ui.ViewTitle;
 import com.isateca.dashboard.DashboardService;
 import com.isateca.dashboard.DashboardService.LowStockEntry;
+import com.isateca.dashboard.DashboardService.NamedCount;
 import com.isateca.dashboard.DashboardService.Summary;
 import com.isateca.inventory.Movement;
+import com.storedobject.chart.BarChart;
+import com.storedobject.chart.CategoryData;
+import com.storedobject.chart.Data;
+import com.storedobject.chart.PieChart;
+import com.storedobject.chart.RectangularCoordinate;
+import com.storedobject.chart.SOChart;
+import com.storedobject.chart.XAxis;
+import com.storedobject.chart.YAxis;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Menu;
 import com.vaadin.flow.router.PageTitle;
@@ -19,11 +29,12 @@ import java.math.BigDecimal;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
+import java.util.List;
 import java.util.Optional;
 
 @Route("dashboard")
 @PageTitle("Dashboard")
-@Menu(order = 4, icon = "vaadin:dashboard", title = "Dashboard")
+@Menu(order = -1, icon = "vaadin:dashboard", title = "Dashboard")
 @PermitAll
 class DashboardView extends VerticalLayout {
 
@@ -32,8 +43,8 @@ class DashboardView extends VerticalLayout {
 
         setSizeFull();
         setSpacing(true);
-        add(new ViewTitle("Dashboard"), buildStatTiles(summary), buildLowStockSection(summary),
-                buildRecentMovementsSection(summary));
+        add(new ViewTitle("Dashboard"), buildStatTiles(summary), buildCharts(summary),
+                buildLowStockSection(summary), buildRecentMovementsSection(summary));
     }
 
     private Div buildStatTiles(Summary summary) {
@@ -58,6 +69,64 @@ class DashboardView extends VerticalLayout {
         labelSpan.addClassName("stat-tile-label");
         tile.add(valueSpan, labelSpan);
         return tile;
+    }
+
+    private HorizontalLayout buildCharts(Summary summary) {
+        var categoryChart = chartSection("Productos activos por categoría",
+                buildCategoryPieChart(summary.productsByCategory()));
+        var movementChart = chartSection("Movimientos recientes por tipo",
+                buildMovementTypeBarChart(summary.recentMovementsByType()));
+
+        var row = new HorizontalLayout(categoryChart, movementChart);
+        row.setWidthFull();
+        row.setFlexGrow(1, categoryChart, movementChart);
+        return row;
+    }
+
+    private VerticalLayout chartSection(String title, Div chart) {
+        var section = new VerticalLayout(new H3(title), chart);
+        section.setPadding(false);
+        section.setSpacing(false);
+        section.getElement().getStyle().set("gap", "var(--lumo-space-s)");
+        section.setWidthFull();
+        return section;
+    }
+
+    private Div buildCategoryPieChart(List<NamedCount> data) {
+        if (data.isEmpty()) {
+            return emptyChartPlaceholder();
+        }
+        var soChart = new SOChart();
+        soChart.setSize("100%", "300px");
+        var labels = new CategoryData(data.stream().map(NamedCount::name).toArray(String[]::new));
+        var values = new Data(data.stream().mapToDouble(NamedCount::count).toArray());
+        soChart.add(new PieChart(labels, values));
+        var wrapper = new Div(soChart);
+        wrapper.setWidthFull();
+        return wrapper;
+    }
+
+    private Div buildMovementTypeBarChart(List<NamedCount> data) {
+        if (data.isEmpty()) {
+            return emptyChartPlaceholder();
+        }
+        var soChart = new SOChart();
+        soChart.setSize("100%", "300px");
+        var categories = new CategoryData(data.stream().map(NamedCount::name).toArray(String[]::new));
+        var counts = new Data(data.stream().mapToDouble(NamedCount::count).toArray());
+        var coordinate = new RectangularCoordinate(new XAxis(categories), new YAxis(counts));
+        coordinate.add(new BarChart(categories, counts));
+        soChart.add(coordinate);
+        var wrapper = new Div(soChart);
+        wrapper.setWidthFull();
+        return wrapper;
+    }
+
+    private Div emptyChartPlaceholder() {
+        var placeholder = new Div(new Span("Sin datos para mostrar"));
+        placeholder.getElement().getStyle().set("color", "var(--lumo-secondary-text-color)");
+        placeholder.getElement().getStyle().set("padding", "var(--lumo-space-m)");
+        return placeholder;
     }
 
     private VerticalLayout buildLowStockSection(Summary summary) {

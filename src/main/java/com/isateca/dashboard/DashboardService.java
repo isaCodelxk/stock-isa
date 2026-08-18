@@ -10,6 +10,7 @@ import com.isateca.inventory.StockItemService;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -50,13 +51,29 @@ public class DashboardService {
                 .map(p -> new LowStockEntry(p, quantityByProduct.getOrDefault(p, BigDecimal.ZERO)))
                 .filter(entry -> entry.currentQuantity().compareTo(entry.product().getMinStock()) < 0).toList();
 
-        return new Summary(activeProducts, activeWarehouses, stockedItems, lowStock, movementService.listRecent());
+        var productsByCategory = products.stream().filter(Product::isActive)
+                .collect(Collectors.groupingBy(p -> p.getCategory().getName(), Collectors.counting())).entrySet()
+                .stream().map(e -> new NamedCount(e.getKey(), e.getValue()))
+                .sorted(Comparator.comparing(NamedCount::name)).toList();
+
+        var recentMovements = movementService.listRecent();
+        var recentMovementsByType = recentMovements.stream()
+                .collect(Collectors.groupingBy(m -> m.getMovementType().getName(), Collectors.counting()))
+                .entrySet().stream().map(e -> new NamedCount(e.getKey(), e.getValue()))
+                .sorted(Comparator.comparing(NamedCount::name)).toList();
+
+        return new Summary(activeProducts, activeWarehouses, stockedItems, lowStock, recentMovements,
+                productsByCategory, recentMovementsByType);
     }
 
     public record LowStockEntry(Product product, BigDecimal currentQuantity) {
     }
 
+    public record NamedCount(String name, long count) {
+    }
+
     public record Summary(long activeProducts, long activeWarehouses, long stockedItemCount,
-            List<LowStockEntry> lowStock, List<Movement> recentMovements) {
+            List<LowStockEntry> lowStock, List<Movement> recentMovements, List<NamedCount> productsByCategory,
+            List<NamedCount> recentMovementsByType) {
     }
 }
