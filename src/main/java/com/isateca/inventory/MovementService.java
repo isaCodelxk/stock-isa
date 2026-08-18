@@ -1,6 +1,7 @@
 package com.isateca.inventory;
 
 import com.isateca.catalog.Warehouse;
+import com.isateca.customer.Customer;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +27,11 @@ public class MovementService {
     @Transactional(readOnly = true)
     public List<Movement> listRecent() {
         return movementRepository.findTop10ByOrderByCreatedAtDesc();
+    }
+
+    @Transactional(readOnly = true)
+    public List<Movement> listByCustomer(Customer customer) {
+        return movementRepository.findByCustomerIdOrderByCreatedAtDesc(customer.getId());
     }
 
     /**

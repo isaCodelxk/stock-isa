@@ -7,4 +7,6 @@ import java.util.List;
 public interface MovementRepository extends JpaRepository<Movement, Long> {
 
     List<Movement> findTop10ByOrderByCreatedAtDesc();
+
+    List<Movement> findByCustomerIdOrderByCreatedAtDesc(Long customerId);
 }
