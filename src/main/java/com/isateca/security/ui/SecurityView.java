@@ -13,7 +13,7 @@ import jakarta.annotation.security.RolesAllowed;
 
 @Route("usuarios")
 @PageTitle("Usuarios")
-@Menu(order = 3, icon = "vaadin:user-heart", title = "Usuarios")
+@Menu(order = 4, icon = "vaadin:user-heart", title = "Usuarios")
 @RolesAllowed("ADMINISTRADOR")
 class SecurityView extends VerticalLayout {
 
