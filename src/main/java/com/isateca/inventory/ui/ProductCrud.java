@@ -123,8 +123,26 @@ class ProductCrud extends AbstractCrudView<Product> {
 
     private List<AttributeDefinition> eligibleDefinitionsFor(@Nullable Category category) {
         return attributeDefinitionService.list().stream().filter(AttributeDefinition::isActive)
-                .filter(definition -> definition.getCategory() == null || definition.getCategory().equals(category))
+                .filter(definition -> appliesToCategory(definition, category))
                 .sorted(Comparator.comparing(AttributeDefinition::getLabel)).toList();
+    }
+
+    // An attribute defined on a parent category applies to its subcategories too - a "Fabricante"
+    // on "Abarrotes" also applies to a "Fruta" child, not just products directly in "Abarrotes".
+    // Category has no built-in cycle prevention when picking a parent, so this walks up guarding
+    // against revisiting a category, rather than assuming the chain is a proper tree.
+    private static boolean appliesToCategory(AttributeDefinition definition, @Nullable Category category) {
+        var definitionCategory = definition.getCategory();
+        if (definitionCategory == null) {
+            return true;
+        }
+        var visited = new HashSet<Category>();
+        for (var current = category; current != null && visited.add(current); current = current.getParent()) {
+            if (definitionCategory.equals(current)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void updateAttributeCandidates() {
