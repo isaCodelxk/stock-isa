@@ -62,8 +62,16 @@ public class DashboardService {
                 .entrySet().stream().map(e -> new NamedCount(e.getKey(), e.getValue()))
                 .sorted(Comparator.comparing(NamedCount::name)).toList();
 
+        // Unlike the other breakdowns, this looks at the full movement history (not just the 10 most
+        // recent) since a "recent" window would often show zero customers by chance. Sorted by count
+        // descending rather than alphabetically - "who buys the most" is the actual question here.
+        var movementsByCustomer = movementService.list().stream().filter(m -> m.getCustomer() != null)
+                .collect(Collectors.groupingBy(m -> m.getCustomer().getName(), Collectors.counting())).entrySet()
+                .stream().map(e -> new NamedCount(e.getKey(), e.getValue()))
+                .sorted(Comparator.comparing(NamedCount::count).reversed()).toList();
+
         return new Summary(activeProducts, activeWarehouses, stockedItems, lowStock, recentMovements,
-                productsByCategory, recentMovementsByType);
+                productsByCategory, recentMovementsByType, movementsByCustomer);
     }
 
     public record LowStockEntry(Product product, BigDecimal currentQuantity) {
@@ -74,6 +82,6 @@ public class DashboardService {
 
     public record Summary(long activeProducts, long activeWarehouses, long stockedItemCount,
             List<LowStockEntry> lowStock, List<Movement> recentMovements, List<NamedCount> productsByCategory,
-            List<NamedCount> recentMovementsByType) {
+            List<NamedCount> recentMovementsByType, List<NamedCount> movementsByCustomer) {
     }
 }

@@ -44,7 +44,8 @@ class DashboardView extends VerticalLayout {
         setSizeFull();
         setSpacing(true);
         add(new ViewTitle("Dashboard"), buildStatTiles(summary), buildCharts(summary),
-                buildLowStockSection(summary), buildRecentMovementsSection(summary));
+                buildCustomerMovementsChart(summary), buildLowStockSection(summary),
+                buildRecentMovementsSection(summary));
     }
 
     private Div buildStatTiles(Summary summary) {
@@ -75,12 +76,16 @@ class DashboardView extends VerticalLayout {
         var categoryChart = chartSection("Productos activos por categoría",
                 buildCategoryPieChart(summary.productsByCategory()));
         var movementChart = chartSection("Movimientos recientes por tipo",
-                buildMovementTypeBarChart(summary.recentMovementsByType()));
+                buildBarChart(summary.recentMovementsByType()));
 
         var row = new HorizontalLayout(categoryChart, movementChart);
         row.setWidthFull();
         row.setFlexGrow(1, categoryChart, movementChart);
         return row;
+    }
+
+    private VerticalLayout buildCustomerMovementsChart(Summary summary) {
+        return chartSection("Movimientos por cliente", buildBarChart(summary.movementsByCustomer()));
     }
 
     private VerticalLayout chartSection(String title, Div chart) {
@@ -106,7 +111,7 @@ class DashboardView extends VerticalLayout {
         return wrapper;
     }
 
-    private Div buildMovementTypeBarChart(List<NamedCount> data) {
+    private Div buildBarChart(List<NamedCount> data) {
         if (data.isEmpty()) {
             return emptyChartPlaceholder();
         }
