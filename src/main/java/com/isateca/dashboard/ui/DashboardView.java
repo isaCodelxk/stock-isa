@@ -114,7 +114,12 @@ class DashboardView extends VerticalLayout {
         soChart.setSize("100%", "300px");
         var categories = new CategoryData(data.stream().map(NamedCount::name).toArray(String[]::new));
         var counts = new Data(data.stream().mapToDouble(NamedCount::count).toArray());
-        var coordinate = new RectangularCoordinate(new XAxis(categories), new YAxis(counts));
+        var xAxis = new XAxis(categories);
+        var xAxisLabel = xAxis.getLabel(true);
+        xAxisLabel.setInterval(0);
+        xAxisLabel.setRotation(-20);
+        var coordinate = new RectangularCoordinate(xAxis, new YAxis(counts));
+        coordinate.sizeIncludesLabels();
         coordinate.add(new BarChart(categories, counts));
         soChart.add(coordinate);
         var wrapper = new Div(soChart);

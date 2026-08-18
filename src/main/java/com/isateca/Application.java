@@ -6,6 +6,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import com.vaadin.flow.component.dependency.StyleSheet;
 import com.vaadin.flow.component.page.AppShellConfigurator;
+import com.vaadin.flow.component.page.ColorScheme;
 import com.vaadin.flow.component.page.Push;
 
 @SpringBootApplication
@@ -13,6 +14,7 @@ import com.vaadin.flow.component.page.Push;
 @StyleSheet(Lumo.UTILITY_STYLESHEET)
 @StyleSheet("styles.css") // Your custom styles
 @Push
+@ColorScheme(ColorScheme.Value.DARK)
 public class Application implements AppShellConfigurator {
 
     public static void main(String[] args) {
