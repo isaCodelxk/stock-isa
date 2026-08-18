@@ -23,6 +23,9 @@ public class MovementType {
     @Column(name = "direction", nullable = false, length = 20)
     private Direction direction;
 
+    @Column(name = "requires_customer", nullable = false)
+    private boolean requiresCustomer = false;
+
     @Column(name = "active", nullable = false)
     private boolean active = true;
 
@@ -52,6 +55,14 @@ public class MovementType {
 
     public void setDirection(Direction direction) {
         this.direction = direction;
+    }
+
+    public boolean isRequiresCustomer() {
+        return requiresCustomer;
+    }
+
+    public void setRequiresCustomer(boolean requiresCustomer) {
+        this.requiresCustomer = requiresCustomer;
     }
 
     public boolean isActive() {

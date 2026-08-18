@@ -6,6 +6,7 @@ import com.isateca.catalog.MovementTypeService;
 import com.isateca.catalog.WarehouseService;
 import com.isateca.catalog.CategoryService;
 import com.isateca.catalog.UnitOfMeasureService;
+import com.isateca.customer.CustomerService;
 import com.isateca.inventory.MovementService;
 import com.isateca.inventory.ProductService;
 import com.isateca.inventory.StockItemService;
@@ -26,7 +27,8 @@ class InventoryView extends VerticalLayout {
     InventoryView(ProductService productService, StockItemService stockItemService, MovementService movementService,
             CategoryService categoryService, UnitOfMeasureService unitOfMeasureService,
             WarehouseService warehouseService, MovementTypeService movementTypeService,
-            AppUserService appUserService, AttributeDefinitionService attributeDefinitionService) {
+            AppUserService appUserService, AttributeDefinitionService attributeDefinitionService,
+            CustomerService customerService) {
 
         var stockItemCrud = new StockItemCrud(stockItemService, productService, warehouseService);
 
@@ -36,7 +38,7 @@ class InventoryView extends VerticalLayout {
                 new ProductCrud(productService, categoryService, unitOfMeasureService, attributeDefinitionService));
         tabs.add("Existencias", stockItemCrud);
         tabs.add("Movimientos", new MovementCrud(movementService, productService, warehouseService,
-                movementTypeService, appUserService, stockItemCrud::refreshData));
+                movementTypeService, appUserService, customerService, stockItemCrud::refreshData));
 
         setSizeFull();
         add(new ViewTitle("Inventario"), tabs);

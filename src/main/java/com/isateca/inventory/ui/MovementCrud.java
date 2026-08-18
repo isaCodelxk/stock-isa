@@ -5,6 +5,8 @@ import com.isateca.catalog.MovementType;
 import com.isateca.catalog.MovementTypeService;
 import com.isateca.catalog.Warehouse;
 import com.isateca.catalog.WarehouseService;
+import com.isateca.customer.Customer;
+import com.isateca.customer.CustomerService;
 import com.isateca.inventory.Movement;
 import com.isateca.inventory.MovementService;
 import com.isateca.inventory.Product;
@@ -16,6 +18,7 @@ import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
+import com.vaadin.flow.data.binder.ValidationResult;
 import com.vaadin.flow.data.converter.StringToBigDecimalConverter;
 
 import java.math.BigDecimal;
@@ -33,6 +36,7 @@ class MovementCrud extends AbstractCrudView<Movement> {
     private final WarehouseService warehouseService;
     private final MovementTypeService movementTypeService;
     private final AppUserService appUserService;
+    private final CustomerService customerService;
     private final Runnable onStockChanged;
 
     private final ComboBox<Product> productField = new ComboBox<>("Producto");
@@ -40,15 +44,18 @@ class MovementCrud extends AbstractCrudView<Movement> {
     private final ComboBox<Warehouse> targetWarehouseField = new ComboBox<>("Bodega destino (solo transferencias)");
     private final ComboBox<MovementType> movementTypeField = new ComboBox<>("Tipo de movimiento");
     private final ComboBox<AppUser> userField = new ComboBox<>("Usuario");
+    private final ComboBox<Customer> customerField = new ComboBox<>("Cliente (solo ventas)");
 
     MovementCrud(MovementService movementService, ProductService productService, WarehouseService warehouseService,
-            MovementTypeService movementTypeService, AppUserService appUserService, Runnable onStockChanged) {
+            MovementTypeService movementTypeService, AppUserService appUserService, CustomerService customerService,
+            Runnable onStockChanged) {
         super("Movimiento");
         this.movementService = movementService;
         this.productService = productService;
         this.warehouseService = warehouseService;
         this.movementTypeService = movementTypeService;
         this.appUserService = appUserService;
+        this.customerService = customerService;
         this.onStockChanged = onStockChanged;
         init();
     }
@@ -65,6 +72,8 @@ class MovementCrud extends AbstractCrudView<Movement> {
         grid.addColumn(m -> Optional.ofNullable(m.getTargetWarehouse()).map(Warehouse::getName).orElse("—"))
                 .setHeader("Bodega destino").setAutoWidth(true);
         grid.addColumn(m -> m.getQuantity().toPlainString()).setHeader("Cantidad").setAutoWidth(true);
+        grid.addColumn(m -> Optional.ofNullable(m.getCustomer()).map(Customer::getName).orElse("—"))
+                .setHeader("Cliente").setAutoWidth(true);
         grid.addColumn(m -> m.getUser().getUsername()).setHeader("Usuario").setAutoWidth(true);
         grid.addColumn(m -> dateTimeFormatter.format(m.getCreatedAt())).setHeader("Fecha").setAutoWidth(true);
     }
@@ -77,6 +86,8 @@ class MovementCrud extends AbstractCrudView<Movement> {
         targetWarehouseField.setClearButtonVisible(true);
         movementTypeField.setItemLabelGenerator(MovementType::getName);
         userField.setItemLabelGenerator(AppUser::getUsername);
+        customerField.setItemLabelGenerator(Customer::getName);
+        customerField.setClearButtonVisible(true);
         var quantityField = new TextField("Cantidad");
         var referenceNoteField = new TextField("Referencia");
         referenceNoteField.setHelperText("Opcional, p. ej. \"Compra folio 123\"");
@@ -93,10 +104,19 @@ class MovementCrud extends AbstractCrudView<Movement> {
                 .bind(Movement::getQuantity, Movement::setQuantity);
         binder.forField(userField).asRequired("El usuario es obligatorio")
                 .bind(Movement::getUser, Movement::setUser);
+        // Required only when the selected movement type demands it (e.g. a sale) - referencing the
+        // combo box's live value rather than getEditingItem(), since that only reflects the bean as
+        // of the last read, not whatever type the user has picked so far in this dialog session.
+        binder.forField(customerField).withValidator((value, context) -> {
+            var type = movementTypeField.getValue();
+            return type != null && type.isRequiresCustomer() && value == null
+                    ? ValidationResult.error("El cliente es obligatorio para este tipo de movimiento")
+                    : ValidationResult.ok();
+        }).bind(Movement::getCustomer, Movement::setCustomer);
         binder.forField(referenceNoteField).bind(Movement::getReferenceNote, Movement::setReferenceNote);
 
-        form.add(productField, movementTypeField, warehouseField, targetWarehouseField, quantityField, userField,
-                referenceNoteField);
+        form.add(productField, movementTypeField, warehouseField, targetWarehouseField, quantityField, customerField,
+                userField, referenceNoteField);
     }
 
     @Override
@@ -107,6 +127,7 @@ class MovementCrud extends AbstractCrudView<Movement> {
         targetWarehouseField.setItems(warehouseService.list());
         movementTypeField.setItems(movementTypeService.list());
         userField.setItems(appUserService.list());
+        customerField.setItems(customerService.list());
     }
 
     @Override

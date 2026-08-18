@@ -41,7 +41,7 @@ class CustomerCrud extends AbstractCrudView<Customer> {
         binder.forField(nameField).asRequired("El nombre es obligatorio")
                 .bind(Customer::getName, Customer::setName);
         binder.forField(phoneField).bind(Customer::getPhone, Customer::setPhone);
-        binder.forField(emailField).withValidator(new EmailValidator("El correo no es válido"))
+        binder.forField(emailField).withValidator(new EmailValidator("El correo no es válido", true))
                 .bind(Customer::getEmail, Customer::setEmail);
         binder.forField(activeField).bind(Customer::isActive, Customer::setActive);
 

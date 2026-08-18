@@ -35,6 +35,7 @@ class MovementTypeCrud extends AbstractCrudView<MovementType> {
     protected void buildColumns(Grid<MovementType> grid) {
         grid.addColumn(MovementType::getName).setHeader("Nombre").setAutoWidth(true);
         grid.addColumn(mt -> directionLabel(mt.getDirection())).setHeader("Dirección").setAutoWidth(true);
+        grid.addColumn(mt -> mt.isRequiresCustomer() ? "Sí" : "No").setHeader("Requiere cliente").setAutoWidth(true);
         grid.addColumn(mt -> mt.isActive() ? "Sí" : "No").setHeader("Activo").setAutoWidth(true);
     }
 
@@ -44,15 +45,19 @@ class MovementTypeCrud extends AbstractCrudView<MovementType> {
         var directionField = new ComboBox<Direction>("Dirección");
         directionField.setItems(Direction.values());
         directionField.setItemLabelGenerator(MovementTypeCrud::directionLabel);
+        var requiresCustomerField = new Checkbox("Requiere cliente");
+        requiresCustomerField.setHelperText("Para movimientos que representan una venta");
         var activeField = new Checkbox("Activo");
 
         binder.forField(nameField).asRequired("El nombre es obligatorio")
                 .bind(MovementType::getName, MovementType::setName);
         binder.forField(directionField).asRequired("La dirección es obligatoria")
                 .bind(MovementType::getDirection, MovementType::setDirection);
+        binder.forField(requiresCustomerField)
+                .bind(MovementType::isRequiresCustomer, MovementType::setRequiresCustomer);
         binder.forField(activeField).bind(MovementType::isActive, MovementType::setActive);
 
-        form.add(nameField, directionField, activeField);
+        form.add(nameField, directionField, requiresCustomerField, activeField);
     }
 
     @Override

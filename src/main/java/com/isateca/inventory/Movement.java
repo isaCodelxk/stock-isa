@@ -2,6 +2,7 @@ package com.isateca.inventory;
 
 import com.isateca.catalog.MovementType;
 import com.isateca.catalog.Warehouse;
+import com.isateca.customer.Customer;
 import com.isateca.security.AppUser;
 import jakarta.persistence.*;
 import org.hibernate.annotations.Check;
@@ -45,6 +46,13 @@ public class Movement {
     @ManyToOne(optional = false)
     @JoinColumn(name = "user_id", nullable = false)
     private AppUser user;
+
+    // Only required when the movement type is marked as such (e.g. a sale) - see
+    // MovementType.requiresCustomer.
+    @ManyToOne
+    @JoinColumn(name = "customer_id")
+    @Nullable
+    private Customer customer;
 
     @Column(name = "reference_note")
     @Nullable
@@ -116,6 +124,14 @@ public class Movement {
 
     public void setUser(AppUser user) {
         this.user = user;
+    }
+
+    public @Nullable Customer getCustomer() {
+        return customer;
+    }
+
+    public void setCustomer(@Nullable Customer customer) {
+        this.customer = customer;
     }
 
     public @Nullable String getReferenceNote() {
