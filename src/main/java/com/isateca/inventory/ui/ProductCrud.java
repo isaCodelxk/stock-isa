@@ -7,6 +7,7 @@ import com.isateca.catalog.Category;
 import com.isateca.catalog.CategoryService;
 import com.isateca.catalog.UnitOfMeasure;
 import com.isateca.catalog.UnitOfMeasureService;
+import com.isateca.inventory.KardexPdfService;
 import com.isateca.inventory.Product;
 import com.isateca.inventory.ProductService;
 import com.vaadin.flow.component.Component;
@@ -17,8 +18,11 @@ import com.vaadin.flow.component.combobox.MultiSelectComboBox;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H4;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
@@ -26,8 +30,11 @@ import com.vaadin.flow.data.binder.Binder.Binding;
 import com.vaadin.flow.data.binder.Setter;
 import com.vaadin.flow.data.converter.StringToBigDecimalConverter;
 import com.vaadin.flow.function.ValueProvider;
+import com.vaadin.flow.server.streams.DownloadHandler;
+import com.vaadin.flow.server.streams.DownloadResponse;
 import org.jspecify.annotations.Nullable;
 
+import java.io.ByteArrayInputStream;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -48,6 +55,7 @@ class ProductCrud extends AbstractCrudView<Product> {
     private final CategoryService categoryService;
     private final UnitOfMeasureService unitOfMeasureService;
     private final AttributeDefinitionService attributeDefinitionService;
+    private final KardexPdfService kardexPdfService;
     private final ComboBox<Category> categoryField = new ComboBox<>("Categoría");
     private final ComboBox<UnitOfMeasure> unitOfMeasureField = new ComboBox<>("Unidad de medida");
     // Only the OPTIONAL attributes eligible for the selected category are offered here - required
@@ -58,12 +66,14 @@ class ProductCrud extends AbstractCrudView<Product> {
     private final List<Binding<Product, ?>> dynamicValueBindings = new ArrayList<>();
 
     ProductCrud(ProductService productService, CategoryService categoryService,
-            UnitOfMeasureService unitOfMeasureService, AttributeDefinitionService attributeDefinitionService) {
+            UnitOfMeasureService unitOfMeasureService, AttributeDefinitionService attributeDefinitionService,
+            KardexPdfService kardexPdfService) {
         super("Producto");
         this.productService = productService;
         this.categoryService = categoryService;
         this.unitOfMeasureService = unitOfMeasureService;
         this.attributeDefinitionService = attributeDefinitionService;
+        this.kardexPdfService = kardexPdfService;
         init();
     }
 
@@ -78,6 +88,19 @@ class ProductCrud extends AbstractCrudView<Product> {
         grid.addColumn(p -> Optional.ofNullable(p.getMinStock()).map(Object::toString).orElse("—"))
                 .setHeader("Stock mínimo").setAutoWidth(true);
         grid.addColumn(p -> p.isActive() ? "Sí" : "No").setHeader("Activo").setAutoWidth(true);
+        grid.addComponentColumn(this::kardexDownloadLink).setHeader("").setFlexGrow(0).setAutoWidth(true);
+    }
+
+    private Anchor kardexDownloadLink(Product product) {
+        var handler = DownloadHandler.fromInputStream(event -> {
+            var pdf = kardexPdfService.generateKardex(product);
+            return new DownloadResponse(new ByteArrayInputStream(pdf), "kardex-" + product.getSku() + ".pdf",
+                    "application/pdf", pdf.length);
+        });
+        var link = new Anchor(handler, "");
+        link.add(new Icon(VaadinIcon.FILE_TEXT_O));
+        link.getElement().setAttribute("title", "Descargar kardex (PDF)");
+        return link;
     }
 
     @Override

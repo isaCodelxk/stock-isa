@@ -34,6 +34,11 @@ public class MovementService {
         return movementRepository.findByCustomerIdOrderByCreatedAtDesc(customer.getId());
     }
 
+    @Transactional(readOnly = true)
+    public List<Movement> listByProduct(Product product) {
+        return movementRepository.findByProductIdOrderByCreatedAtAsc(product.getId());
+    }
+
     /**
      * Persists a new movement and applies its effect to the relevant stock item(s). Movements are
      * append-only (see {@code MovementCrud.isEditable()}), so this is only ever used for creation.

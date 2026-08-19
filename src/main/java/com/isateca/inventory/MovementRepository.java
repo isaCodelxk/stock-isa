@@ -9,4 +9,6 @@ public interface MovementRepository extends JpaRepository<Movement, Long> {
     List<Movement> findTop10ByOrderByCreatedAtDesc();
 
     List<Movement> findByCustomerIdOrderByCreatedAtDesc(Long customerId);
+
+    List<Movement> findByProductIdOrderByCreatedAtAsc(Long productId);
 }

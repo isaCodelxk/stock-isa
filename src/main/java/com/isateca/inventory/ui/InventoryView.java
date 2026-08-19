@@ -7,6 +7,7 @@ import com.isateca.catalog.WarehouseService;
 import com.isateca.catalog.CategoryService;
 import com.isateca.catalog.UnitOfMeasureService;
 import com.isateca.customer.CustomerService;
+import com.isateca.inventory.KardexPdfService;
 import com.isateca.inventory.MovementService;
 import com.isateca.inventory.ProductService;
 import com.isateca.inventory.StockItemService;
@@ -28,14 +29,14 @@ class InventoryView extends VerticalLayout {
             CategoryService categoryService, UnitOfMeasureService unitOfMeasureService,
             WarehouseService warehouseService, MovementTypeService movementTypeService,
             AppUserService appUserService, AttributeDefinitionService attributeDefinitionService,
-            CustomerService customerService) {
+            CustomerService customerService, KardexPdfService kardexPdfService) {
 
         var stockItemCrud = new StockItemCrud(stockItemService, productService, warehouseService);
 
         var tabs = new TabSheet();
         tabs.setSizeFull();
-        tabs.add("Productos",
-                new ProductCrud(productService, categoryService, unitOfMeasureService, attributeDefinitionService));
+        tabs.add("Productos", new ProductCrud(productService, categoryService, unitOfMeasureService,
+                attributeDefinitionService, kardexPdfService));
         tabs.add("Existencias", stockItemCrud);
         tabs.add("Movimientos", new MovementCrud(movementService, productService, warehouseService,
                 movementTypeService, appUserService, customerService, stockItemCrud::refreshData));
