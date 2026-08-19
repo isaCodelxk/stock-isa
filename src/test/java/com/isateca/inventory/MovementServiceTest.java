@@ -59,7 +59,8 @@ class MovementServiceTest {
     void setUp() {
         var category = categoryService.save(new Category("Test category"));
         var unit = unitOfMeasureService.save(new UnitOfMeasure("Pieza", "pz"));
-        product = productService.save(new Product("SKU-1", "Test product", category, unit));
+        product = productService
+                .save(new Product("SKU-1", "Test product", category, unit, BigDecimal.TEN, BigDecimal.valueOf(20)));
         warehouseA = warehouseService.save(new Warehouse("Bodega A"));
         warehouseB = warehouseService.save(new Warehouse("Bodega B"));
         inType = movementTypeService.save(new MovementType("Entrada", MovementType.Direction.IN));

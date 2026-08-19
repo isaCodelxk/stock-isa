@@ -28,6 +28,7 @@ import com.vaadin.flow.data.converter.StringToBigDecimalConverter;
 import com.vaadin.flow.function.ValueProvider;
 import org.jspecify.annotations.Nullable;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -72,6 +73,8 @@ class ProductCrud extends AbstractCrudView<Product> {
         grid.addColumn(Product::getName).setHeader("Nombre").setAutoWidth(true);
         grid.addColumn(p -> p.getCategory().getName()).setHeader("Categoría").setAutoWidth(true);
         grid.addColumn(p -> p.getUnitOfMeasure().getAbbreviation()).setHeader("Unidad").setAutoWidth(true);
+        grid.addColumn(p -> p.getPurchasePrice().toPlainString()).setHeader("Costo de compra").setAutoWidth(true);
+        grid.addColumn(p -> p.getSalePrice().toPlainString()).setHeader("Precio de venta").setAutoWidth(true);
         grid.addColumn(p -> Optional.ofNullable(p.getMinStock()).map(Object::toString).orElse("—"))
                 .setHeader("Stock mínimo").setAutoWidth(true);
         grid.addColumn(p -> p.isActive() ? "Sí" : "No").setHeader("Activo").setAutoWidth(true);
@@ -84,6 +87,8 @@ class ProductCrud extends AbstractCrudView<Product> {
         var descriptionField = new TextField("Descripción");
         categoryField.setItemLabelGenerator(Category::getName);
         unitOfMeasureField.setItemLabelGenerator(UnitOfMeasure::getAbbreviation);
+        var purchasePriceField = new TextField("Costo de compra");
+        var salePriceField = new TextField("Precio de venta");
         var minStockField = new TextField("Stock mínimo");
         minStockField.setHelperText("Opcional, para alertas futuras");
         var activeField = new Checkbox("Activo");
@@ -95,6 +100,14 @@ class ProductCrud extends AbstractCrudView<Product> {
                 .bind(Product::getCategory, Product::setCategory);
         binder.forField(unitOfMeasureField).asRequired("La unidad de medida es obligatoria")
                 .bind(Product::getUnitOfMeasure, Product::setUnitOfMeasure);
+        binder.forField(purchasePriceField).asRequired("El costo de compra es obligatorio")
+                .withConverter(new StringToBigDecimalConverter("Debe ser un número"))
+                .withValidator(price -> price.signum() >= 0, "El costo no puede ser negativo")
+                .bind(Product::getPurchasePrice, Product::setPurchasePrice);
+        binder.forField(salePriceField).asRequired("El precio de venta es obligatorio")
+                .withConverter(new StringToBigDecimalConverter("Debe ser un número"))
+                .withValidator(price -> price.signum() >= 0, "El precio no puede ser negativo")
+                .bind(Product::getSalePrice, Product::setSalePrice);
         binder.forField(minStockField).withNullRepresentation("")
                 .withConverter(new StringToBigDecimalConverter("Debe ser un número"))
                 .bind(Product::getMinStock, Product::setMinStock);
@@ -116,8 +129,8 @@ class ProductCrud extends AbstractCrudView<Product> {
         attributesField.addValueChangeListener(event -> rebuildDynamicValueFields(binder));
 
         var dynamicSection = new Div(new H4("Atributos dinámicos"), attributesField, dynamicValuesContainer);
-        form.add(skuField, nameField, descriptionField, categoryField, unitOfMeasureField, minStockField,
-                activeField, dynamicSection);
+        form.add(skuField, nameField, descriptionField, categoryField, unitOfMeasureField, purchasePriceField,
+                salePriceField, minStockField, activeField, dynamicSection);
         form.setColspan(dynamicSection, 2);
     }
 
@@ -304,6 +317,6 @@ class ProductCrud extends AbstractCrudView<Product> {
         if (categories.isEmpty() || units.isEmpty()) {
             throw new IllegalStateException("Primero crea al menos una categoría y una unidad de medida");
         }
-        return new Product("", "", categories.get(0), units.get(0));
+        return new Product("", "", categories.get(0), units.get(0), BigDecimal.ZERO, BigDecimal.ZERO);
     }
 }

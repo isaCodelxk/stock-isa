@@ -41,6 +41,12 @@ public class Product {
     @Nullable
     private BigDecimal minStock;
 
+    @Column(name = "purchase_price", nullable = false, precision = 14, scale = 2)
+    private BigDecimal purchasePrice;
+
+    @Column(name = "sale_price", nullable = false, precision = 14, scale = 2)
+    private BigDecimal salePrice;
+
     // Dynamic attributes defined per category via AttributeDefinition.
     // No columnDefinition here on purpose: Hibernate maps SqlTypes.JSON to each
     // dialect's native JSON type (jsonb on PostgreSQL) so the schema stays
@@ -56,11 +62,14 @@ public class Product {
     protected Product() { // To keep Hibernate happy
     }
 
-    public Product(String sku, String name, Category category, UnitOfMeasure unitOfMeasure) {
+    public Product(String sku, String name, Category category, UnitOfMeasure unitOfMeasure,
+            BigDecimal purchasePrice, BigDecimal salePrice) {
         this.sku = sku;
         this.name = name;
         this.category = category;
         this.unitOfMeasure = unitOfMeasure;
+        this.purchasePrice = purchasePrice;
+        this.salePrice = salePrice;
     }
 
     public @Nullable Long getId() {
@@ -113,6 +122,22 @@ public class Product {
 
     public void setMinStock(@Nullable BigDecimal minStock) {
         this.minStock = minStock;
+    }
+
+    public BigDecimal getPurchasePrice() {
+        return purchasePrice;
+    }
+
+    public void setPurchasePrice(BigDecimal purchasePrice) {
+        this.purchasePrice = purchasePrice;
+    }
+
+    public BigDecimal getSalePrice() {
+        return salePrice;
+    }
+
+    public void setSalePrice(BigDecimal salePrice) {
+        this.salePrice = salePrice;
     }
 
     public @Nullable Map<String, Object> getCustomAttributes() {
