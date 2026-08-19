@@ -43,6 +43,13 @@ public class Movement {
     @Column(name = "quantity", nullable = false, precision = 14, scale = 3)
     private BigDecimal quantity;
 
+    // Snapshot of the price at the time of this movement - Product.purchasePrice/salePrice can
+    // change later without rewriting history, and a particular movement may have used a different
+    // (e.g. negotiated) price than the product's current one anyway.
+    @Column(name = "unit_price", precision = 14, scale = 2)
+    @Nullable
+    private BigDecimal unitPrice;
+
     @ManyToOne(optional = false)
     @JoinColumn(name = "user_id", nullable = false)
     private AppUser user;
@@ -116,6 +123,14 @@ public class Movement {
 
     public void setQuantity(BigDecimal quantity) {
         this.quantity = quantity;
+    }
+
+    public @Nullable BigDecimal getUnitPrice() {
+        return unitPrice;
+    }
+
+    public void setUnitPrice(@Nullable BigDecimal unitPrice) {
+        this.unitPrice = unitPrice;
     }
 
     public AppUser getUser() {

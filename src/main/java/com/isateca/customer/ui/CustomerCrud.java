@@ -17,6 +17,7 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.validator.EmailValidator;
 
+import java.math.BigDecimal;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
@@ -60,6 +61,8 @@ class CustomerCrud extends AbstractCrudView<Customer> {
                 .setAutoWidth(true);
         grid.addColumn(m -> m.getMovementType().getName()).setHeader("Tipo").setAutoWidth(true);
         grid.addColumn(m -> m.getQuantity().toPlainString()).setHeader("Cantidad").setAutoWidth(true);
+        grid.addColumn(m -> Optional.ofNullable(m.getUnitPrice()).map(BigDecimal::toPlainString).orElse("—"))
+                .setHeader("Precio unitario").setAutoWidth(true);
         grid.addColumn(m -> dateTimeFormatter.format(m.getCreatedAt())).setHeader("Fecha").setAutoWidth(true);
         grid.addColumn(m -> Optional.ofNullable(m.getReferenceNote()).orElse("—")).setHeader("Referencia")
                 .setAutoWidth(true);

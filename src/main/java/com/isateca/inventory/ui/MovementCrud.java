@@ -72,6 +72,8 @@ class MovementCrud extends AbstractCrudView<Movement> {
         grid.addColumn(m -> Optional.ofNullable(m.getTargetWarehouse()).map(Warehouse::getName).orElse("—"))
                 .setHeader("Bodega destino").setAutoWidth(true);
         grid.addColumn(m -> m.getQuantity().toPlainString()).setHeader("Cantidad").setAutoWidth(true);
+        grid.addColumn(m -> Optional.ofNullable(m.getUnitPrice()).map(BigDecimal::toPlainString).orElse("—"))
+                .setHeader("Precio unitario").setAutoWidth(true);
         grid.addColumn(m -> Optional.ofNullable(m.getCustomer()).map(Customer::getName).orElse("—"))
                 .setHeader("Cliente").setAutoWidth(true);
         grid.addColumn(m -> m.getUser().getUsername()).setHeader("Usuario").setAutoWidth(true);
@@ -89,6 +91,8 @@ class MovementCrud extends AbstractCrudView<Movement> {
         customerField.setItemLabelGenerator(Customer::getName);
         customerField.setClearButtonVisible(true);
         var quantityField = new TextField("Cantidad");
+        var unitPriceField = new TextField("Precio unitario");
+        unitPriceField.setHelperText("Opcional, precio del producto al momento de este movimiento");
         var referenceNoteField = new TextField("Referencia");
         referenceNoteField.setHelperText("Opcional, p. ej. \"Compra folio 123\"");
 
@@ -102,6 +106,9 @@ class MovementCrud extends AbstractCrudView<Movement> {
         binder.forField(quantityField).withConverter(new StringToBigDecimalConverter("Debe ser un número"))
                 .withValidator(qty -> qty.signum() > 0, "La cantidad debe ser mayor a 0")
                 .bind(Movement::getQuantity, Movement::setQuantity);
+        binder.forField(unitPriceField).withNullRepresentation("")
+                .withConverter(new StringToBigDecimalConverter("Debe ser un número"))
+                .bind(Movement::getUnitPrice, Movement::setUnitPrice);
         binder.forField(userField).asRequired("El usuario es obligatorio")
                 .bind(Movement::getUser, Movement::setUser);
         // Required only when the selected movement type demands it (e.g. a sale) - referencing the
@@ -115,8 +122,8 @@ class MovementCrud extends AbstractCrudView<Movement> {
         }).bind(Movement::getCustomer, Movement::setCustomer);
         binder.forField(referenceNoteField).bind(Movement::getReferenceNote, Movement::setReferenceNote);
 
-        form.add(productField, movementTypeField, warehouseField, targetWarehouseField, quantityField, customerField,
-                userField, referenceNoteField);
+        form.add(productField, movementTypeField, warehouseField, targetWarehouseField, quantityField,
+                unitPriceField, customerField, userField, referenceNoteField);
     }
 
     @Override
