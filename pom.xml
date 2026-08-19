@@ -64,10 +64,10 @@
             <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
         <dependency>
-            <!-- Dashboard charts. Vaadin add-on, wraps echarts. -->
-            <groupId>org.vaadin.addons.so</groupId>
-            <artifactId>so-charts</artifactId>
-            <version>6.0.1</version>
+            <!-- Dashboard charts. Vaadin add-on, wraps ApexCharts.js. -->
+            <groupId>com.github.appreciated</groupId>
+            <artifactId>apexcharts</artifactId>
+            <version>25.0.1</version>
         </dependency>
         <dependency>
             <groupId>com.h2database</groupId>

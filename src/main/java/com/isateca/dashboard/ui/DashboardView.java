@@ -1,19 +1,23 @@
 package com.isateca.dashboard.ui;
 
+import com.github.appreciated.apexcharts.ApexChartsBuilder;
+import com.github.appreciated.apexcharts.config.builder.ChartBuilder;
+import com.github.appreciated.apexcharts.config.builder.DataLabelsBuilder;
+import com.github.appreciated.apexcharts.config.builder.LegendBuilder;
+import com.github.appreciated.apexcharts.config.builder.PlotOptionsBuilder;
+import com.github.appreciated.apexcharts.config.builder.ThemeBuilder;
+import com.github.appreciated.apexcharts.config.builder.XAxisBuilder;
+import com.github.appreciated.apexcharts.config.chart.Type;
+import com.github.appreciated.apexcharts.config.chart.builder.ToolbarBuilder;
+import com.github.appreciated.apexcharts.config.plotoptions.builder.BarBuilder;
+import com.github.appreciated.apexcharts.config.theme.Mode;
+import com.github.appreciated.apexcharts.helper.Series;
 import com.isateca.base.ui.ViewTitle;
 import com.isateca.dashboard.DashboardService;
 import com.isateca.dashboard.DashboardService.LowStockEntry;
 import com.isateca.dashboard.DashboardService.NamedCount;
 import com.isateca.dashboard.DashboardService.Summary;
 import com.isateca.inventory.Movement;
-import com.storedobject.chart.BarChart;
-import com.storedobject.chart.CategoryData;
-import com.storedobject.chart.Data;
-import com.storedobject.chart.PieChart;
-import com.storedobject.chart.RectangularCoordinate;
-import com.storedobject.chart.SOChart;
-import com.storedobject.chart.XAxis;
-import com.storedobject.chart.YAxis;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H3;
@@ -101,12 +105,15 @@ class DashboardView extends VerticalLayout {
         if (data.isEmpty()) {
             return emptyChartPlaceholder();
         }
-        var soChart = new SOChart();
-        soChart.setSize("100%", "300px");
-        var labels = new CategoryData(data.stream().map(NamedCount::name).toArray(String[]::new));
-        var values = new Data(data.stream().mapToDouble(NamedCount::count).toArray());
-        soChart.add(new PieChart(labels, values));
-        var wrapper = new Div(soChart);
+        var labels = data.stream().map(NamedCount::name).toArray(String[]::new);
+        var values = data.stream().map(NamedCount::count).map(Double::valueOf).toArray(Double[]::new);
+        var chart = ApexChartsBuilder.get()
+                .withChart(ChartBuilder.get().withType(Type.PIE)
+                        .withToolbar(ToolbarBuilder.get().withShow(false).build()).build())
+                .withTheme(ThemeBuilder.get().withMode(Mode.DARK).build()).withLabels(labels).withSeries(values)
+                .build();
+        chart.setHeight("300px");
+        var wrapper = new Div(chart);
         wrapper.setWidthFull();
         return wrapper;
     }
@@ -115,20 +122,20 @@ class DashboardView extends VerticalLayout {
         if (data.isEmpty()) {
             return emptyChartPlaceholder();
         }
-        var soChart = new SOChart();
-        soChart.setSize("100%", "300px");
-        soChart.disableDefaultLegend();
-        var categories = new CategoryData(data.stream().map(NamedCount::name).toArray(String[]::new));
-        var counts = new Data(data.stream().mapToDouble(NamedCount::count).toArray());
-        var xAxis = new XAxis(categories);
-        var xAxisLabel = xAxis.getLabel(true);
-        xAxisLabel.setInterval(0);
-        xAxisLabel.setRotation(-20);
-        var coordinate = new RectangularCoordinate(xAxis, new YAxis(counts));
-        coordinate.sizeIncludesLabels();
-        coordinate.add(new BarChart(categories, counts));
-        soChart.add(coordinate);
-        var wrapper = new Div(soChart);
+        var categories = data.stream().map(NamedCount::name).toList();
+        var values = data.stream().map(NamedCount::count).map(Double::valueOf).toArray(Double[]::new);
+        var chart = ApexChartsBuilder.get()
+                .withChart(ChartBuilder.get().withType(Type.BAR)
+                        .withToolbar(ToolbarBuilder.get().withShow(false).build()).build())
+                .withTheme(ThemeBuilder.get().withMode(Mode.DARK).build())
+                .withPlotOptions(PlotOptionsBuilder.get()
+                        .withBar(BarBuilder.get().withHorizontal(false).withColumnWidth("55%").build()).build())
+                .withDataLabels(DataLabelsBuilder.get().withEnabled(false).build())
+                .withLegend(LegendBuilder.get().withShow(false).build())
+                .withXaxis(XAxisBuilder.get().withCategories(categories).build())
+                .withSeries(new Series<>("Movimientos", values)).build();
+        chart.setHeight("300px");
+        var wrapper = new Div(chart);
         wrapper.setWidthFull();
         return wrapper;
     }
