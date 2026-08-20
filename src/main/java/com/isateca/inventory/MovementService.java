@@ -1,11 +1,15 @@
 package com.isateca.inventory;
 
+import com.isateca.catalog.MovementType;
+import com.isateca.catalog.MovementTypeService;
 import com.isateca.catalog.Warehouse;
 import com.isateca.customer.Customer;
+import com.isateca.security.AppUser;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
 
 @Service
@@ -13,10 +17,13 @@ public class MovementService {
 
     private final MovementRepository movementRepository;
     private final StockItemRepository stockItemRepository;
+    private final MovementTypeService movementTypeService;
 
-    MovementService(MovementRepository movementRepository, StockItemRepository stockItemRepository) {
+    MovementService(MovementRepository movementRepository, StockItemRepository stockItemRepository,
+            MovementTypeService movementTypeService) {
         this.movementRepository = movementRepository;
         this.stockItemRepository = stockItemRepository;
+        this.movementTypeService = movementTypeService;
     }
 
     @Transactional(readOnly = true)
@@ -58,6 +65,29 @@ public class MovementService {
     public void delete(Movement movement) {
         applyToStock(movement, true);
         movementRepository.delete(movement);
+    }
+
+    /**
+     * Sets a stock item's quantity to {@code newQuantity} by recording an inventory-adjustment
+     * movement for the difference (IN if it went up, OUT if it went down), instead of writing
+     * stock_item directly - so a manual correction from the Existencias view still shows up in the
+     * product's kardex rather than silently diverging from its movement history. No-op if the
+     * quantity doesn't actually change.
+     */
+    @Transactional
+    public void adjustStockItem(Product product, Warehouse warehouse, BigDecimal newQuantity, AppUser user) {
+        var previousQuantity = stockItemRepository.findByProductIdAndWarehouseId(product.getId(), warehouse.getId())
+                .map(StockItem::getQuantity).orElse(BigDecimal.ZERO);
+        var delta = newQuantity.subtract(previousQuantity);
+        if (delta.signum() == 0) {
+            return;
+        }
+
+        var direction = delta.signum() > 0 ? MovementType.Direction.IN : MovementType.Direction.OUT;
+        var movementType = movementTypeService.getOrCreateAdjustmentType(direction);
+        var movement = new Movement(product, warehouse, movementType, delta.abs(), user, Instant.now());
+        movement.setReferenceNote("Ajuste manual de existencias");
+        save(movement);
     }
 
     private void applyToStock(Movement movement, boolean reverse) {

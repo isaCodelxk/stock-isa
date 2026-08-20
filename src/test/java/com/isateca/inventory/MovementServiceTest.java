@@ -134,4 +134,37 @@ class MovementServiceTest {
 
         assertThatThrownBy(() -> movementService.delete(movement)).isInstanceOf(IllegalStateException.class);
     }
+
+    @Test
+    void adjusting_stock_upward_records_an_in_movement() {
+        movementService.adjustStockItem(product, warehouseA, BigDecimal.valueOf(15), user);
+
+        assertThat(quantityAt(warehouseA)).isEqualByComparingTo("15");
+        var recorded = movementService.listByProduct(product);
+        assertThat(recorded).hasSize(1);
+        assertThat(recorded.get(0).getMovementType().getDirection()).isEqualTo(MovementType.Direction.IN);
+        assertThat(recorded.get(0).getQuantity()).isEqualByComparingTo("15");
+    }
+
+    @Test
+    void adjusting_stock_downward_records_an_out_movement() {
+        movementService.save(new Movement(product, warehouseA, inType, BigDecimal.TEN, user, Instant.now()));
+
+        movementService.adjustStockItem(product, warehouseA, BigDecimal.valueOf(4), user);
+
+        assertThat(quantityAt(warehouseA)).isEqualByComparingTo("4");
+        var recorded = movementService.listByProduct(product);
+        assertThat(recorded).hasSize(2);
+        assertThat(recorded.get(1).getMovementType().getDirection()).isEqualTo(MovementType.Direction.OUT);
+        assertThat(recorded.get(1).getQuantity()).isEqualByComparingTo("6");
+    }
+
+    @Test
+    void adjusting_stock_to_the_same_quantity_is_a_no_op() {
+        movementService.save(new Movement(product, warehouseA, inType, BigDecimal.TEN, user, Instant.now()));
+
+        movementService.adjustStockItem(product, warehouseA, BigDecimal.TEN, user);
+
+        assertThat(movementService.listByProduct(product)).hasSize(1);
+    }
 }

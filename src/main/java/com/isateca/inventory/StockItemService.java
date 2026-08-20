@@ -4,6 +4,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class StockItemService {
@@ -19,9 +20,9 @@ public class StockItemService {
         return stockItemRepository.findAll();
     }
 
-    @Transactional
-    public StockItem save(StockItem stockItem) {
-        return stockItemRepository.save(stockItem);
+    @Transactional(readOnly = true)
+    public Optional<StockItem> find(Long id) {
+        return stockItemRepository.findById(id);
     }
 
     @Transactional

@@ -31,7 +31,8 @@ class InventoryView extends VerticalLayout {
             AppUserService appUserService, AttributeDefinitionService attributeDefinitionService,
             CustomerService customerService, KardexPdfService kardexPdfService) {
 
-        var stockItemCrud = new StockItemCrud(stockItemService, productService, warehouseService);
+        var stockItemCrud = new StockItemCrud(stockItemService, productService, warehouseService, movementService,
+                appUserService);
 
         var tabs = new TabSheet();
         tabs.setSizeFull();
